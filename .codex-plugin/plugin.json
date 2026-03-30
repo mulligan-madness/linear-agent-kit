@@ -1,0 +1,32 @@
+{
+  "name": "linear-cli",
+  "version": "0.1.0",
+  "description": "Teach Codex how to operate Linear through the local schpet/linear-cli installation across issues, planning, documents, teams, and workspace administration.",
+  "author": {
+    "name": "Brennan Mulligan",
+    "email": "108836961+mulligan-madness@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "linear",
+    "cli",
+    "issues",
+    "project-management",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Linear CLI",
+    "shortDescription": "Operate Linear through the local CLI",
+    "longDescription": "Use the locally installed linear CLI for issue management, planning workflows, documents, labels, teams, workspace routing, and raw GraphQL fallback with explicit safety and verification rules.",
+    "developerName": "Internal Tools",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use the local linear CLI to inspect workspaces, manage issues, and drive planning workflows safely"
+    ]
+  }
+}
