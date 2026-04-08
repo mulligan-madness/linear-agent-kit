@@ -45,7 +45,8 @@ Once the request is clearly scoped to a domain, route immediately and do not kee
    - ask only when the risk of choosing the wrong artifact is high
 5. Classify the request:
    - auth or workspace selection -> `linear-cli-auth`
-   - issues, comments, attachments, dependencies, PR helpers -> `linear-cli-issues`
+   - issues, comments, attachments, dependencies, branch-linked lookup -> `linear-cli-issues`
+   - PR publishing tied to Linear issues, stacked-base recommendation, issue-to-commit PR drafting, and post-PR issue updates -> `linear-cli-pr-publish`
    - projects, milestones, cycles, initiatives, status updates -> `linear-cli-planning`
    - teams, labels, documents, config, schema, autolinks -> `linear-cli-workspace`
    - raw GraphQL fallback -> `linear-cli-api`

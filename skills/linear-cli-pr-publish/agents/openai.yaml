@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linear PR Publish"
+  short_description: "Publish GitHub PRs from Linear issue sets"
+  default_prompt: "Use $linear-cli-pr-publish to draft and publish a PR from the current branch with Linear issue mapping."

@@ -7,9 +7,10 @@ Included skills:
 1. `linear-cli`
 2. `linear-cli-auth`
 3. `linear-cli-issues`
-4. `linear-cli-planning`
-5. `linear-cli-workspace`
-6. `linear-cli-api`
+4. `linear-cli-pr-publish`
+5. `linear-cli-planning`
+6. `linear-cli-workspace`
+7. `linear-cli-api`
 
 Bundled helper scripts:
 
@@ -64,6 +65,7 @@ Installed directories:
 1. `linear-cli`
 2. `linear-cli-auth`
 3. `linear-cli-issues`
-4. `linear-cli-planning`
-5. `linear-cli-workspace`
-6. `linear-cli-api`
+4. `linear-cli-pr-publish`
+5. `linear-cli-planning`
+6. `linear-cli-workspace`
+7. `linear-cli-api`
