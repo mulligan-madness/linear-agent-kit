@@ -11,6 +11,10 @@ Included skills:
 5. `linear-cli-workspace`
 6. `linear-cli-api`
 
+Bundled helper scripts:
+
+1. `skills/linear-cli-issues/scripts/fetch_linear_issue_images.mjs`
+
 ## Quick install
 
 Clone the repo, then run:
@@ -33,6 +37,12 @@ These skills teach Codex how to:
 4. handle planning objects and status updates with evidence-first workflows
 5. use documents, labels, teams, and other workspace features without guessing
 6. fall back to raw `linear api` only when first-class CLI commands are insufficient
+
+The bundled helper script supports image-aware issue workflows by:
+
+1. extracting inline image references from issue descriptions and optional comments
+2. downloading retrievable assets to local temp paths using the same auth rule as the upstream CLI for `uploads.linear.app`
+3. returning machine-readable JSON so agents can hand successful local files to native image-viewing tools
 
 ## Local install target
 
