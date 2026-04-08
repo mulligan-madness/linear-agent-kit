@@ -125,3 +125,30 @@ test("downloadAsset saves content with extension inferred from response type", a
     await rm(downloadDir, { recursive: true, force: true });
   }
 });
+
+test("downloadAsset reports fetch errors without throwing", async () => {
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+
+  try {
+    const result = await downloadAsset({
+      asset: {
+        kind: "image",
+        url: "https://example.invalid/not-reachable.png",
+        label: "broken image",
+        sourceType: "description",
+        sourceId: "CNS-999",
+      },
+      downloadDir,
+      fetchImpl: async () => {
+        throw new TypeError("fetch failed");
+      },
+      apiKey: null,
+    });
+
+    assert.equal(result.status, "failed");
+    assert.equal(result.path, null);
+    assert.match(result.error ?? "", /fetch failed/);
+  } finally {
+    await rm(downloadDir, { recursive: true, force: true });
+  }
+});

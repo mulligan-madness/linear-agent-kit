@@ -143,50 +143,60 @@ export async function downloadAsset({
   fetchImpl = fetch,
   apiKey = null,
 }) {
-  const hash = getUrlHash(asset.url);
-  const assetDir = join(downloadDir, hash);
-  await mkdir(assetDir, { recursive: true });
+  try {
+    const hash = getUrlHash(asset.url);
+    const assetDir = join(downloadDir, hash);
+    await mkdir(assetDir, { recursive: true });
 
-  const headers = buildAuthHeaders(asset.url, apiKey);
-  const response = await fetchImpl(asset.url, { headers, redirect: "follow" });
+    const headers = buildAuthHeaders(asset.url, apiKey);
+    const response = await fetchImpl(asset.url, { headers, redirect: "follow" });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return {
+        ...asset,
+        hostType: describeHost(asset.url),
+        status: "failed",
+        error: `${response.status} ${response.statusText}`.trim(),
+        path: null,
+      };
+    }
+
+    const contentType = response.headers.get("content-type");
+    const extension = inferExtension(asset.url, contentType);
+    const filename = `${sanitizeLabel(asset.label)}${extension}`;
+    const filepath = join(assetDir, filename);
+
+    if (existsSync(filepath)) {
+      return {
+        ...asset,
+        hostType: describeHost(asset.url),
+        status: "cached",
+        contentType,
+        path: filepath,
+        error: null,
+      };
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await writeFile(filepath, buffer);
+
     return {
       ...asset,
       hostType: describeHost(asset.url),
-      status: "failed",
-      error: `${response.status} ${response.statusText}`.trim(),
-      path: null,
-    };
-  }
-
-  const contentType = response.headers.get("content-type");
-  const extension = inferExtension(asset.url, contentType);
-  const filename = `${sanitizeLabel(asset.label)}${extension}`;
-  const filepath = join(assetDir, filename);
-
-  if (existsSync(filepath)) {
-    return {
-      ...asset,
-      hostType: describeHost(asset.url),
-      status: "cached",
+      status: "downloaded",
       contentType,
       path: filepath,
       error: null,
     };
+  } catch (error) {
+    return {
+      ...asset,
+      hostType: describeHost(asset.url),
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+      path: null,
+    };
   }
-
-  const buffer = Buffer.from(await response.arrayBuffer());
-  await writeFile(filepath, buffer);
-
-  return {
-    ...asset,
-    hostType: describeHost(asset.url),
-    status: "downloaded",
-    contentType,
-    path: filepath,
-    error: null,
-  };
 }
 
 function describeHost(url) {
