@@ -38,8 +38,8 @@ Use this skill for issue work through the local CLI: reading issues, creating or
    - if the user names a workspace, keep `-w <slug>` authoritative
    - otherwise use the configured default workspace
 2. Use the issue discovery order:
-   - known issue id -> `linear issue view`
-   - branch-linked issue -> `linear issue id` then `linear issue view`
+   - known issue id -> `linear issue view <issueId> --json --no-download`
+   - branch-linked issue -> `linear issue id` then `linear issue view <issueId> --json --no-download`
    - named project -> `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --project <project> --limit <n>`
    - named cycle -> `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --cycle <cycle> --limit <n>`
    - named milestone -> `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --project <project> --milestone <milestone> --limit <n>`
@@ -48,8 +48,22 @@ Use this skill for issue work through the local CLI: reading issues, creating or
    - one team -> auto-select it
    - multiple teams with no disambiguation -> ask for the team
 3. Prefer deterministic, non-interactive writes when the request is specific.
-4. For long markdown descriptions, use `--description-file <path>` instead of long inline quoting.
-5. After writes, verify with `linear issue view <issueId>` or a targeted follow-up read.
+4. Prefer structured reads:
+   - use `linear issue view <issueId> --json --no-download` when you need to inspect or preserve markdown exactly
+   - use `linear issue view <issueId> --no-download` for human-readable terminal output without attachment download noise
+   - use `linear issue comment list <issueId> --json` when comment parsing or image preservation matters
+   - use `linear issue describe <issueId>` only for the Linear trailer
+5. For long markdown descriptions or comment bodies, use `--description-file <path>` or `--body-file <path>` instead of long inline quoting.
+6. Treat description updates as full replacements:
+   - when the user wants to append, tighten, or partially revise the issue body, first read the existing description with `--json --no-download`
+   - merge the requested change into the existing markdown intentionally
+   - preserve unrelated sections and existing inline image markdown unless the user explicitly asks to remove or replace them
+   - if the request is only a status note or small addendum, prefer a comment instead of rewriting the description
+7. Treat inline images as a two-step workflow:
+   - first detect image markdown or remote URLs with `--json --no-download`
+   - if the task only needs preservation, keep the markdown unchanged
+   - if the task needs actual image-content inspection, use a separate explicit fetch path; do not rely on `linear issue view` auto-download behavior for verification
+8. After writes, verify with `linear issue view <issueId> --json --no-download` or another targeted structured read.
 
 ## Quality Standard
 
@@ -62,11 +76,15 @@ Bring strong Linear issue hygiene to every action:
 - if the request is pure notes or context, prefer a document over a new issue
 - if the request is actionable tracked work, create the issue instead of burying it in a document
 - if the request is pure inspection, grouping, or reporting, do not create a new artifact
+- when updating descriptions, preserve existing markdown that the user did not ask to remove
+- when descriptions or comments include inline images, preserve the image markdown by default and explicitly call out any image-fetch limitation
 
 ## Quick Reference
 
 - Quick issue capture: create the smallest useful issue that preserves the work, then refine later if needed.
-- Issue read path: default to `linear issue view <issueId>`; use `linear issue describe` only when the Linear trailer matters, and `linear issue url` only when the user explicitly wants the link.
+- Issue read path: default to `linear issue view <issueId> --json --no-download`; use plain `--no-download` when a human-readable view is enough, use `linear issue describe` only when the Linear trailer matters, and use `linear issue url` only when the user explicitly wants the link.
+- Comment read path: default to `linear issue comment list <issueId> --json` when you need structured comment bodies or image-aware handling.
+- Description rewrite path: default to read-merge-write, not blind replacement, unless the user explicitly wants a full rewrite.
 - Quick issue comment: post directly when it is a factual operational note; draft first when it contains decisions, commitments, or stakeholder-facing status.
 - Broad issue discovery: `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --limit <n>`.
 - Destructive cleanup: confirm before `linear issue delete`, `linear issue comment delete`, or `linear issue relation delete`.
@@ -75,15 +93,18 @@ Bring strong Linear issue hygiene to every action:
 
 - Capture freely when the user needs something written down quickly.
 - Draft first when the content is stakeholder-facing, commitment-bearing, or a polished rewrite.
+- If the request is additive and the issue already contains useful structure or inline images, preserve that structure and merge the change into the existing body.
 - Destructive actions like `linear issue delete` or deleting comments or relations require confirmation.
 
 ## Recipes
 
-- If the user wants to capture a rough idea quickly, use `linear issue create --title <title> --description <description>` or `linear issue create --title <title> --description-file <path>`, then verify with `linear issue view <issueId>`.
+- If the user wants to capture a rough idea quickly, use `linear issue create --title <title> --description <description>` or `linear issue create --title <title> --description-file <path>`, then verify with `linear issue view <issueId> --json --no-download`.
 - If the user asks what issue to work on and no issue is identified, check `linear team list` first, then use `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --limit <n>`.
-- If the user wants a quick operational comment, use `linear issue comment add <issueId> --body <text>` or `linear issue comment add <issueId> --body-file <path>`, then verify with `linear issue comment list <issueId>`.
+- If the user wants a quick operational comment, use `linear issue comment add <issueId> --body <text>` or `linear issue comment add <issueId> --body-file <path>`, then verify with `linear issue comment list <issueId> --json`.
+- If the user wants a partial description change, read the current body with `linear issue view <issueId> --json --no-download`, preserve existing sections and image markdown, write the merged result to a temp file, then update with `linear issue update <issueId> --description-file <path>` and verify with another structured read.
 - If the user needs dependency context, use `linear issue relation list <issueId>` before changing relations, and use `linear issue relation add` or `linear issue relation delete` only after the intent is clear.
-- If the user asks to delete or clean up issue-side objects, require confirmation first and then verify the result with `linear issue view <issueId>`, `linear issue comment list <issueId>`, or `linear issue relation list <issueId>`.
+- If the user asks to inspect issue images, first extract the image URLs with `linear issue view <issueId> --json --no-download` or `linear issue comment list <issueId> --json`, then use a dedicated fetch path only if actual image bytes are required.
+- If the user asks to delete or clean up issue-side objects, require confirmation first and then verify the result with `linear issue view <issueId> --json --no-download`, `linear issue comment list <issueId> --json`, or `linear issue relation list <issueId>`.
 
 ## Output
 
