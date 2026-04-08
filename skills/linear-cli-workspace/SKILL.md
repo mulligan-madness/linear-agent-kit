@@ -39,7 +39,12 @@ Use this skill for workspace-scoped administration and supporting structures: te
    - read the current markdown first when the user wants a partial revision
    - merge the requested change intentionally instead of blindly replacing the body
    - preserve unrelated sections and inline image markdown unless the user explicitly asks to remove them
-6. Verify changes with a follow-up `list` or `view`.
+6. Treat document images explicitly:
+   - detect document image references with `linear document view <id> --raw` or `--json`
+   - if the task needs actual image-content inspection, run `scripts/fetch_linear_document_images.mjs --document <id> [--workspace <slug>]`
+   - when the helper returns local file paths, inspect those files with the environment's native image tool
+   - if the helper reports failed downloads, treat that as a blocker on image understanding and report it directly
+7. Verify changes with a follow-up `list` or `view`.
 
 ## Quality Standard
 
@@ -75,6 +80,11 @@ Use this skill for workspace-scoped administration and supporting structures: te
 - Trigger: `tighten this doc without losing its structure or images`
 - Commands: `linear document view <id> --raw`, resolve the canonical document ID with `linear document view <id> --json` if needed, merge the change into a temp file, then `linear document update <documentId> --content-file <path>`
 - Verify: re-read with `linear document view <id> --raw` or `--json` and confirm the intended sections and image markdown remain
+
+### Document image inspection
+- Trigger: `what does the image in this Linear doc show`
+- Commands: `scripts/fetch_linear_document_images.mjs --document <id> [--workspace <slug>]`, then open returned local file paths with the environment's image tool
+- Verify: if the helper returns only failures, report that the image references exist but the bytes could not be retrieved
 
 ### Label and team inspection
 - Trigger: `show me the workspace structure`
