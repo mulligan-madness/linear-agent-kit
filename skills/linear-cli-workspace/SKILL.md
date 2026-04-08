@@ -31,6 +31,7 @@ Use this skill for workspace-scoped administration and supporting structures: te
    - use `linear document list --json` for broad inspection or filtering
    - use `linear document view <id> --json` for metadata and canonical URLs
    - use `linear document view <id> --raw` when preserving markdown exactly or preparing a non-destructive rewrite
+   - if a slug-like document identifier is ambiguous for update flows, resolve the canonical document ID first with `linear document view <id> --json`
 4. For documents, prefer file-backed content when the markdown is substantial:
    - `linear document create --content-file <path>`
    - `linear document update --content-file <path>`
@@ -72,7 +73,7 @@ Use this skill for workspace-scoped administration and supporting structures: te
 
 ### Document revision with markdown fidelity
 - Trigger: `tighten this doc without losing its structure or images`
-- Commands: `linear document view <id> --raw`, merge the change into a temp file, then `linear document update <id> --content-file <path>`
+- Commands: `linear document view <id> --raw`, resolve the canonical document ID with `linear document view <id> --json` if needed, merge the change into a temp file, then `linear document update <documentId> --content-file <path>`
 - Verify: re-read with `linear document view <id> --raw` or `--json` and confirm the intended sections and image markdown remain
 
 ### Label and team inspection
