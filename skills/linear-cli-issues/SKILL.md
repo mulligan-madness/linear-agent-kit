@@ -65,6 +65,7 @@ Use this skill for issue work through the local CLI: reading issues, creating or
    - if the task needs actual image-content inspection, run `scripts/fetch_linear_issue_images.mjs --issue <issueId> [--workspace <slug>] [--comments]`
    - when the helper returns local file paths, inspect those files with the environment's native image tool instead of shell-level binary inspection
    - if the helper reports failed downloads, treat that as a blocker on image understanding and report it directly
+   - do not fall back to ad hoc `curl`, hex dumps, or other shell-level binary inspection after the helper has already failed
    - do not rely on `linear issue view` auto-download behavior for verification
 8. After writes, verify with `linear issue view <issueId> --json --no-download` or another targeted structured read.
 
@@ -89,6 +90,7 @@ Bring strong Linear issue hygiene to every action:
 - Comment read path: default to `linear issue comment list <issueId> --json` when you need structured comment bodies or image-aware handling.
 - Description rewrite path: default to read-merge-write, not blind replacement, unless the user explicitly wants a full rewrite.
 - Image inspection path: use `scripts/fetch_linear_issue_images.mjs`, then open successful local paths with the environment's image tool.
+- If the helper cannot retrieve bytes, stop and report the blocker instead of inventing a second shell download path.
 - Quick issue comment: post directly when it is a factual operational note; draft first when it contains decisions, commitments, or stakeholder-facing status.
 - Broad issue discovery: `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --limit <n>`.
 - Destructive cleanup: confirm before `linear issue delete`, `linear issue comment delete`, or `linear issue relation delete`.
@@ -107,7 +109,7 @@ Bring strong Linear issue hygiene to every action:
 - If the user wants a quick operational comment, use `linear issue comment add <issueId> --body <text>` or `linear issue comment add <issueId> --body-file <path>`, then verify with `linear issue comment list <issueId> --json`.
 - If the user wants a partial description change, read the current body with `linear issue view <issueId> --json --no-download`, preserve existing sections and image markdown, write the merged result to a temp file, then update with `linear issue update <issueId> --description-file <path>` and verify with another structured read.
 - If the user needs dependency context, use `linear issue relation list <issueId>` before changing relations, and use `linear issue relation add` or `linear issue relation delete` only after the intent is clear.
-- If the user asks to inspect issue images, run `scripts/fetch_linear_issue_images.mjs --issue <issueId> [--workspace <slug>] [--comments]`, then open any returned local file paths with the environment's image tool. If the helper reports download failures, state that the image reference exists but the asset could not be retrieved.
+- If the user asks to inspect issue images, run `scripts/fetch_linear_issue_images.mjs --issue <issueId> [--workspace <slug>] [--comments]`, then open any returned local file paths with the environment's image tool. If the helper reports download failures, state that the image reference exists but the asset could not be retrieved, and stop instead of attempting ad hoc shell downloads.
 - If the user asks to delete or clean up issue-side objects, require confirmation first and then verify the result with `linear issue view <issueId> --json --no-download`, `linear issue comment list <issueId> --json`, or `linear issue relation list <issueId>`.
 
 ## Output
