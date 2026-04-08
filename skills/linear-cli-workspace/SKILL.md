@@ -24,12 +24,21 @@ Use this skill for workspace-scoped administration and supporting structures: te
    - `linear team members`
    - `linear label list`
    - `linear document list`
-   - `linear document view <id>`
+   - `linear document view <id> --json` when you need structured metadata
+   - `linear document view <id> --raw` when exact markdown fidelity matters
 2. Use explicit `-w <slug>` when the workspace is named.
-3. For documents, prefer file-backed content when the markdown is substantial:
+3. Prefer structured document reads:
+   - use `linear document list --json` for broad inspection or filtering
+   - use `linear document view <id> --json` for metadata and canonical URLs
+   - use `linear document view <id> --raw` when preserving markdown exactly or preparing a non-destructive rewrite
+4. For documents, prefer file-backed content when the markdown is substantial:
    - `linear document create --content-file <path>`
    - `linear document update --content-file <path>`
-4. Verify changes with a follow-up `list` or `view`.
+5. Treat document updates like issue-description updates:
+   - read the current markdown first when the user wants a partial revision
+   - merge the requested change intentionally instead of blindly replacing the body
+   - preserve unrelated sections and inline image markdown unless the user explicitly asks to remove them
+6. Verify changes with a follow-up `list` or `view`.
 
 ## Quality Standard
 
@@ -38,6 +47,7 @@ Use this skill for workspace-scoped administration and supporting structures: te
 - labels should clarify triage and reporting rather than duplicate state
 - team and autolink changes should improve workflow consistency, not surprise the workspace
 - config and schema inspection should be used to inform safe CLI behavior, not as casual noise
+- when documents contain inline images, preserve the markdown by default and call out any image-fetch limitation explicitly
 
 ## Safety Rules
 
@@ -59,6 +69,11 @@ Use this skill for workspace-scoped administration and supporting structures: te
 - Trigger: `turn this rough idea into something I can refine later`
 - Commands: `linear document create -t <title> -c <content>` or `linear document create -t <title> --content-file <path>`
 - Verify: the document contains enough structure that someone else can pick it up later
+
+### Document revision with markdown fidelity
+- Trigger: `tighten this doc without losing its structure or images`
+- Commands: `linear document view <id> --raw`, merge the change into a temp file, then `linear document update <id> --content-file <path>`
+- Verify: re-read with `linear document view <id> --raw` or `--json` and confirm the intended sections and image markdown remain
 
 ### Label and team inspection
 - Trigger: `show me the workspace structure`

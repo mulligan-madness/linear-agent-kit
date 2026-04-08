@@ -62,7 +62,8 @@ Use this skill for issue work through the local CLI: reading issues, creating or
 7. Distinguish image references from real uploads:
    - `linear issue create` and `linear issue update` only store markdown; they do not upload local image files referenced from the description
    - `linear issue comment add --attach <file>` is the first-class CLI upload path for files and images
-   - when you need a known-good Linear-hosted image fixture, upload it first through `comment add --attach`, then reuse the resulting asset URL if the issue description also needs to reference it
+   - when you need to upload a local image directly into an issue description, run `scripts/promote_linear_image_to_issue_description.mjs --issue <issueId> --file <path> [--workspace <slug>]`
+   - when you need a known-good Linear-hosted image fixture without touching the description yet, upload it first through `comment add --attach`, then reuse the resulting asset URL if the issue description also needs to reference it
 8. Treat inline images as a two-step workflow:
    - first detect image markdown or remote URLs with `--json --no-download`
    - if the task only needs preservation, keep the markdown unchanged
@@ -94,6 +95,7 @@ Bring strong Linear issue hygiene to every action:
 - Comment read path: default to `linear issue comment list <issueId> --json` when you need structured comment bodies or image-aware handling.
 - Description rewrite path: default to read-merge-write, not blind replacement, unless the user explicitly wants a full rewrite.
 - Upload path for new images: use `linear issue comment add --attach <file>`; do not assume `issue create` or `issue update` uploads local files mentioned in markdown.
+- Issue-description image upload path: use `scripts/promote_linear_image_to_issue_description.mjs` for local files you want uploaded and merged into the description in one flow.
 - Image inspection path: use `scripts/fetch_linear_issue_images.mjs`, then open successful local paths with the environment's image tool.
 - If the helper cannot retrieve bytes, stop and report the blocker instead of inventing a second shell download path.
 - Quick issue comment: post directly when it is a factual operational note; draft first when it contains decisions, commitments, or stakeholder-facing status.
@@ -113,6 +115,7 @@ Bring strong Linear issue hygiene to every action:
 - If the user asks what issue to work on and no issue is identified, check `linear team list` first, then use `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --limit <n>`.
 - If the user wants a quick operational comment, use `linear issue comment add <issueId> --body <text>` or `linear issue comment add <issueId> --body-file <path>`, then verify with `linear issue comment list <issueId> --json`.
 - If the user needs to upload a new image into Linear, use `linear issue comment add <issueId> --attach <file>` first, then read the stored comment body to capture the resulting Linear asset URL if another field needs to reference that uploaded asset.
+- If the user needs to upload a local image into the issue description itself, use `scripts/promote_linear_image_to_issue_description.mjs --issue <issueId> --file <path> [--workspace <slug>] [--alt <text>] [--position append|prepend]`, then verify with `linear issue view <issueId> --json --no-download`.
 - If the user wants a partial description change, read the current body with `linear issue view <issueId> --json --no-download`, preserve existing sections and image markdown, write the merged result to a temp file, then update with `linear issue update <issueId> --description-file <path>` and verify with another structured read.
 - If the user needs dependency context, use `linear issue relation list <issueId>` before changing relations, and use `linear issue relation add` or `linear issue relation delete` only after the intent is clear.
 - If the user asks to inspect issue images, run `scripts/fetch_linear_issue_images.mjs --issue <issueId> [--workspace <slug>] [--comments]`, then open any returned local file paths with the environment's image tool. If the helper reports download failures, state that the image reference exists but the asset could not be retrieved, and stop instead of attempting ad hoc shell downloads.

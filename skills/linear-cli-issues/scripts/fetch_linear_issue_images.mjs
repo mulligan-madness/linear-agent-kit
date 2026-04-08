@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, extname, join } from "node:path";
 
@@ -22,6 +22,17 @@ const CONTENT_TYPE_EXTENSIONS = new Map([
   ["image/gif", ".gif"],
   ["image/svg+xml", ".svg"],
   ["application/pdf", ".pdf"],
+]);
+
+const MIME_TYPES = new Map([
+  [".png", "image/png"],
+  [".jpg", "image/jpeg"],
+  [".jpeg", "image/jpeg"],
+  [".gif", "image/gif"],
+  [".webp", "image/webp"],
+  [".bmp", "image/bmp"],
+  [".tif", "image/tiff"],
+  [".tiff", "image/tiff"],
 ]);
 
 export function getLinearUploadHost(url) {
@@ -45,27 +56,18 @@ export function extractMarkdownAssets(markdown) {
   const assets = [];
   const seen = new Set();
 
-  const imagePattern = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
-  for (const match of markdown.matchAll(imagePattern)) {
-    const label = match[1] || null;
-    const url = stripWrapping(match[2]);
-    const key = `image:${url}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      assets.push({ kind: "image", url, label });
+  for (const token of parseMarkdownInlineAssets(markdown)) {
+    if (token.kind === "link" && !getLinearUploadHost(token.url)) {
+      continue;
     }
-  }
-
-  const linkPattern = /\[([^\]]*)\]\(([^)\s]+)\)/g;
-  for (const match of markdown.matchAll(linkPattern)) {
-    if (match.index > 0 && markdown[match.index - 1] === "!") continue;
-    const label = match[1] || null;
-    const url = stripWrapping(match[2]);
-    if (!getLinearUploadHost(url)) continue;
-    const key = `link:${url}`;
+    const key = `${token.kind}:${token.url}`;
     if (!seen.has(key)) {
       seen.add(key);
-      assets.push({ kind: "link", url, label });
+      assets.push({
+        kind: token.kind,
+        url: token.url,
+        label: token.label,
+      });
     }
   }
 
@@ -106,6 +108,112 @@ function stripWrapping(value) {
   return value;
 }
 
+function parseMarkdownInlineAssets(markdown) {
+  const tokens = [];
+
+  for (let index = 0; index < markdown.length; index += 1) {
+    const isImage = markdown[index] === "!" && markdown[index + 1] === "[";
+    const isLink = markdown[index] === "[";
+    if (!isImage && !isLink) continue;
+
+    const labelStart = isImage ? index + 2 : index + 1;
+    const labelEnd = findClosingBracket(markdown, labelStart - 1);
+    if (labelEnd === -1) continue;
+
+    let cursor = labelEnd + 1;
+    while (markdown[cursor] === " " || markdown[cursor] === "\t") {
+      cursor += 1;
+    }
+    if (markdown[cursor] !== "(") {
+      index = labelEnd;
+      continue;
+    }
+
+    const destination = parseLinkDestination(markdown, cursor);
+    if (!destination) {
+      index = cursor;
+      continue;
+    }
+
+    tokens.push({
+      kind: isImage ? "image" : "link",
+      label: markdown.slice(labelStart, labelEnd) || null,
+      url: stripWrapping(destination.value),
+    });
+    index = destination.end;
+  }
+
+  return tokens;
+}
+
+function findClosingBracket(markdown, openIndex) {
+  let escaped = false;
+  for (let index = openIndex + 1; index < markdown.length; index += 1) {
+    const char = markdown[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === "]") {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function parseLinkDestination(markdown, openParenIndex) {
+  let index = openParenIndex + 1;
+  while (markdown[index] === " " || markdown[index] === "\t" || markdown[index] === "\n") {
+    index += 1;
+  }
+
+  if (markdown[index] === "<") {
+    const close = markdown.indexOf(">", index + 1);
+    if (close === -1) return null;
+    const closeParen = markdown.indexOf(")", close + 1);
+    if (closeParen === -1) return null;
+    return {
+      value: markdown.slice(index, close + 1),
+      end: closeParen,
+    };
+  }
+
+  let escaped = false;
+  let depth = 0;
+  const start = index;
+
+  for (; index < markdown.length; index += 1) {
+    const char = markdown[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === "(") {
+      depth += 1;
+      continue;
+    }
+    if (char === ")") {
+      if (depth === 0) {
+        return {
+          value: markdown.slice(start, index).trim(),
+          end: index,
+        };
+      }
+      depth -= 1;
+    }
+  }
+
+  return null;
+}
+
 function inferExtension(url, contentType) {
   const normalizedType = contentType?.split(";")[0]?.trim().toLowerCase() || "";
   if (CONTENT_TYPE_EXTENSIONS.has(normalizedType)) {
@@ -131,6 +239,14 @@ function sanitizeLabel(label) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 64);
   return base || "asset";
+}
+
+function chooseFilename(label, extension) {
+  const base = sanitizeLabel(label);
+  if (!extension) return base;
+  return base.toLowerCase().endsWith(extension.toLowerCase())
+    ? base
+    : `${base}${extension}`;
 }
 
 function getUrlHash(url) {
@@ -163,7 +279,7 @@ export async function downloadAsset({
 
     const contentType = response.headers.get("content-type");
     const extension = inferExtension(asset.url, contentType);
-    const filename = `${sanitizeLabel(asset.label)}${extension}`;
+    const filename = chooseFilename(asset.label, extension);
     const filepath = join(assetDir, filename);
 
     if (existsSync(filepath)) {
@@ -199,6 +315,29 @@ export async function downloadAsset({
   }
 }
 
+function getMimeType(filepath) {
+  const extension = extname(filepath).toLowerCase();
+  return MIME_TYPES.get(extension) || "application/octet-stream";
+}
+
+export function renderImageMarkdown({ altText, assetUrl }) {
+  return `![${altText || "image"}](${assetUrl})`;
+}
+
+export function mergeDescriptionWithBlock({
+  currentDescription,
+  block,
+  position = "append",
+}) {
+  const trimmedCurrent = currentDescription?.trim() || "";
+  const trimmedBlock = block.trim();
+  if (!trimmedCurrent) return trimmedBlock;
+  if (position === "prepend") {
+    return `${trimmedBlock}\n\n${trimmedCurrent}`;
+  }
+  return `${trimmedCurrent}\n\n${trimmedBlock}`;
+}
+
 function describeHost(url) {
   const host = getLinearUploadHost(url);
   if (host === LINEAR_PRIVATE_UPLOAD_HOST) return "linear-private";
@@ -218,13 +357,113 @@ function resolveApiKey(workspace) {
   }
 }
 
-function readIssueData(issueId, workspace) {
+export function readIssueData(issueId, workspace) {
   const args = ["issue", "view", issueId, "--json", "--no-download"];
   if (workspace) {
     args.push("-w", workspace);
   }
   const output = execFileSync("linear", args, { encoding: "utf8" });
   return JSON.parse(output);
+}
+
+function runLinearJsonCommand(args) {
+  const output = execFileSync("linear", args, { encoding: "utf8" });
+  return JSON.parse(output);
+}
+
+export function requestLinearUpload({
+  filepath,
+  workspace,
+  apiCaller = runLinearJsonCommand,
+}) {
+  const mutation = `
+    mutation FileUpload($contentType: String!, $filename: String!, $size: Int!, $makePublic: Boolean) {
+      fileUpload(contentType: $contentType, filename: $filename, size: $size, makePublic: $makePublic) {
+        success
+        uploadFile {
+          assetUrl
+          uploadUrl
+          headers {
+            key
+            value
+          }
+        }
+      }
+    }
+  `;
+
+  const filename = basename(filepath);
+  const contentType = getMimeType(filepath);
+  const makePublic = contentType.startsWith("image/") && contentType !== "image/svg+xml";
+
+  return stat(filepath).then((fileInfo) => {
+    const size = fileInfo.size;
+    const args = ["api", mutation, "--variables-json", JSON.stringify({
+      contentType,
+      filename,
+      size,
+      makePublic,
+    })];
+    if (workspace) {
+      args.push("-w", workspace);
+    }
+
+    const data = apiCaller(args);
+    const upload = data?.data?.fileUpload?.uploadFile;
+    if (!data?.data?.fileUpload?.success || !upload) {
+      throw new Error("Failed to request Linear upload URL");
+    }
+
+    return {
+      filename,
+      contentType,
+      size,
+      assetUrl: upload.assetUrl,
+      uploadUrl: upload.uploadUrl,
+      headers: upload.headers ?? [],
+    };
+  });
+}
+
+export async function uploadFileToLinear({
+  filepath,
+  workspace,
+  fetchImpl = fetch,
+  apiCaller = runLinearJsonCommand,
+}) {
+  const upload = await requestLinearUpload({ filepath, workspace, apiCaller });
+  const fileBytes = await readFile(filepath);
+  const headers = {
+    "content-type": upload.contentType,
+  };
+  for (const header of upload.headers) {
+    headers[header.key] = header.value;
+  }
+
+  const response = await fetchImpl(upload.uploadUrl, {
+    method: "PUT",
+    headers,
+    body: fileBytes,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to upload file: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  return upload;
+}
+
+export function updateIssueDescription({
+  issueId,
+  workspace,
+  descriptionFile,
+}) {
+  const args = ["issue", "update", issueId, "--description-file", descriptionFile];
+  if (workspace) {
+    args.push("-w", workspace);
+  }
+  execFileSync("linear", args, { encoding: "utf8", stdio: "pipe" });
 }
 
 function parseArgs(argv) {

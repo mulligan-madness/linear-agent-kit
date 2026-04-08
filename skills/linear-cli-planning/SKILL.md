@@ -21,16 +21,19 @@ Use this skill for planning structures and execution tracking: projects, milesto
 ## Workflow
 
 1. Discover the current planning state first:
-   - `linear project list`
+   - `linear project list --json` when you need structured inspection across projects
    - `linear project view <projectId>`
    - `linear milestone list`
    - `linear cycle list`
-   - `linear initiative list`
-   - `linear project-update list <projectId>`
-   - `linear initiative-update list <initiativeId>`
+   - `linear initiative list --json`
+   - `linear initiative view <initiativeId> --json`
+   - `linear project-update list <projectId> --json`
+   - `linear initiative-update list <initiativeId> --json`
 2. Use explicit workspace targeting when the user names a workspace.
 3. For create or update actions, prefer specific flag-driven commands over interactive prompts when inputs are known.
-4. After any write, verify with a fresh `view` or `list`.
+4. When a planning object does not expose the structured fields you need through first-class CLI output, route to `linear-cli-api` instead of inferring from rendered text.
+5. For project and initiative status updates, prefer `--body-file <path>` when the markdown is substantial.
+6. After any write, verify with a fresh `view` or `list`.
 
 ## Quality Standard
 
@@ -42,6 +45,7 @@ Apply strong planning judgment rather than acting like a thin shell wrapper:
 - cycles should be used deliberately, with scope that teams can actually absorb
 - status updates should be concise about progress, risk, and next steps
 - if the request is only grouping or reporting and existing views or filters are enough, do not create a new planning object
+- verify planning reads against structured output when the request depends on exact status-update content or metadata
 
 ## Safety Rules
 
@@ -55,7 +59,7 @@ Apply strong planning judgment rather than acting like a thin shell wrapper:
 
 ### Weekly update drafting
 - Trigger: `figure out what project updates I should post this week`
-- Commands: `linear project view <projectId>`, `linear project-update list <projectId>`, then related `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --project <project>`
+- Commands: `linear project view <projectId>`, `linear project-update list <projectId> --json`, then related `linear issue list --sort priority --all-assignees --all-states --team <teamKey> --project <project>`
 - Verify: the draft names progress, blockers or risks, and next steps; if it is stakeholder-facing, show it before posting
 
 ### Project vs initiative diagnosis
@@ -65,7 +69,7 @@ Apply strong planning judgment rather than acting like a thin shell wrapper:
 
 ### Non-destructive planning inspection
 - Trigger: `show me the current planning state`
-- Commands: `linear project list`, `linear initiative list`, `linear cycle list`, `linear milestone list`
+- Commands: `linear project list --json`, `linear initiative list --json`, `linear cycle list`, `linear milestone list`
 - Verify: summarize the current objects and do not create or change anything
 
 ### Destructive cleanup

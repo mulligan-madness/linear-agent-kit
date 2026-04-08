@@ -14,6 +14,7 @@ Included skills:
 Bundled helper scripts:
 
 1. `skills/linear-cli-issues/scripts/fetch_linear_issue_images.mjs`
+2. `skills/linear-cli-issues/scripts/promote_linear_image_to_issue_description.mjs`
 
 ## Quick install
 
@@ -43,6 +44,12 @@ The bundled helper script supports image-aware issue workflows by:
 1. extracting inline image references from issue descriptions and optional comments
 2. downloading retrievable assets to local temp paths using the same auth rule as the upstream CLI for `uploads.linear.app`
 3. returning machine-readable JSON so agents can hand successful local files to native image-viewing tools
+
+The bundled promotion helper supports local-image-to-description workflows by:
+
+1. uploading a local image file to Linear cloud storage
+2. generating the corresponding markdown image reference
+3. merging that reference into the target issue description non-destructively
 
 ## Local install target
 

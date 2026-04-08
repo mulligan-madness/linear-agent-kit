@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -10,6 +10,9 @@ import {
   collectIssueAssets,
   downloadAsset,
   extractMarkdownAssets,
+  mergeDescriptionWithBlock,
+  renderImageMarkdown,
+  requestLinearUpload,
 } from "../skills/linear-cli-issues/scripts/fetch_linear_issue_images.mjs";
 
 test("extractMarkdownAssets finds markdown images and Linear upload links", () => {
@@ -35,6 +38,32 @@ test("extractMarkdownAssets finds markdown images and Linear upload links", () =
         kind: "link",
         url: "https://uploads.linear.app/org/spec.pdf",
         label: "spec pdf",
+      },
+    ],
+  );
+});
+
+test("extractMarkdownAssets handles angle-bracket URLs and nested parentheses", () => {
+  const markdown = [
+    "![diagram](<https://example.com/assets/(diagram).png>)",
+    "",
+    "[upload](https://uploads.linear.app/org/path/(spec).pdf)",
+  ].join("\n");
+
+  const assets = extractMarkdownAssets(markdown);
+
+  assert.deepEqual(
+    assets.map(({ kind, url, label }) => ({ kind, url, label })),
+    [
+      {
+        kind: "image",
+        url: "https://example.com/assets/(diagram).png",
+        label: "diagram",
+      },
+      {
+        kind: "link",
+        url: "https://uploads.linear.app/org/path/(spec).pdf",
+        label: "upload",
       },
     ],
   );
@@ -126,6 +155,40 @@ test("downloadAsset saves content with extension inferred from response type", a
   }
 });
 
+test("downloadAsset does not duplicate file extensions already present in label", async () => {
+  const server = createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "image/png" });
+    response.end(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const port = typeof address === "object" && address ? address.port : 0;
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+
+  try {
+    const result = await downloadAsset({
+      asset: {
+        kind: "image",
+        url: `http://127.0.0.1:${port}/fixture`,
+        label: "fixture.png",
+        sourceType: "description",
+        sourceId: "CNS-999",
+      },
+      downloadDir,
+      fetchImpl: fetch,
+      apiKey: null,
+    });
+
+    assert.equal(result.status, "downloaded");
+    assert.match(result.path ?? "", /fixture\.png$/);
+    assert.doesNotMatch(result.path ?? "", /\.png\.png$/);
+  } finally {
+    server.close();
+    await rm(downloadDir, { recursive: true, force: true });
+  }
+});
+
 test("downloadAsset reports fetch errors without throwing", async () => {
   const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
 
@@ -150,5 +213,68 @@ test("downloadAsset reports fetch errors without throwing", async () => {
     assert.match(result.error ?? "", /fetch failed/);
   } finally {
     await rm(downloadDir, { recursive: true, force: true });
+  }
+});
+
+test("renderImageMarkdown and mergeDescriptionWithBlock build deterministic description content", () => {
+  const markdown = renderImageMarkdown({
+    altText: "fixture",
+    assetUrl: "https://public.linear.app/org/file.png",
+  });
+
+  assert.equal(markdown, "![fixture](https://public.linear.app/org/file.png)");
+  assert.equal(
+    mergeDescriptionWithBlock({
+      currentDescription: "## Existing\n\nBody",
+      block: markdown,
+      position: "append",
+    }),
+    "## Existing\n\nBody\n\n![fixture](https://public.linear.app/org/file.png)",
+  );
+  assert.equal(
+    mergeDescriptionWithBlock({
+      currentDescription: "## Existing\n\nBody",
+      block: markdown,
+      position: "prepend",
+    }),
+    "![fixture](https://public.linear.app/org/file.png)\n\n## Existing\n\nBody",
+  );
+});
+
+test("requestLinearUpload returns parsed upload metadata from linear api", async () => {
+  const fixtureDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+  const fixturePath = join(fixtureDir, "fixture.png");
+  await writeFile(fixturePath, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+
+  try {
+    const upload = await requestLinearUpload({
+      filepath: fixturePath,
+      workspace: "cns-labs",
+      apiCaller: (args) => {
+        assert.equal(args[0], "api");
+        assert.match(args[1], /mutation FileUpload/);
+        return {
+          data: {
+            fileUpload: {
+              success: true,
+              uploadFile: {
+                assetUrl: "https://public.linear.app/org/file.png",
+                uploadUrl: "https://upload.example.test",
+                headers: [{ key: "x-test", value: "1" }],
+              },
+            },
+          },
+        };
+      },
+    });
+
+    assert.equal(upload.assetUrl, "https://public.linear.app/org/file.png");
+    assert.equal(upload.uploadUrl, "https://upload.example.test");
+    assert.deepEqual(upload.headers, [{ key: "x-test", value: "1" }]);
+    assert.equal(upload.contentType, "image/png");
+    assert.equal(upload.filename, "fixture.png");
+    assert.equal(upload.size, 4);
+  } finally {
+    await rm(fixtureDir, { recursive: true, force: true });
   }
 });
