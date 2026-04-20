@@ -48,20 +48,27 @@ linear auth whoami
 Copy and paste this into Codex, Cursor, or another coding agent:
 
 ```text
-Set up this repository's Linear Agent Kit on this machine.
+Set up the Linear Agent Kit from https://github.com/mulligan-madness/linear-agent-kit on this machine.
 
 Important distinction:
 - The upstream dependency is the Linear CLI executable, `linear`.
 - This repository is the Linear Agent Kit.
 
 Your job:
-1. Read `README.md` and `INSTALL.md` in this repository before doing anything else.
+1. Read these docs before doing anything else:
+   - https://raw.githubusercontent.com/mulligan-madness/linear-agent-kit/main/README.md
+   - https://raw.githubusercontent.com/mulligan-madness/linear-agent-kit/main/INSTALL.md
 2. Check whether the upstream Linear CLI is installed by running `linear --version`.
-3. If `linear` is missing, install it using the commands documented in this repository, then verify with `linear --version`.
+3. If `linear` is missing:
+   - first try `brew install schpet/tap/linear`
+   - if Homebrew is unavailable, use `deno install -A --reload -f -g -n linear jsr:@schpet/linear-cli`
+   - then verify with `linear --version`
 4. Check whether `linear` is authenticated by running `linear auth list` and `linear auth whoami`.
 5. If authentication is missing, run `linear auth login`, complete the auth flow, and verify again.
 6. Ask the user which adapter(s) to install: `codex`, `cursor`, or `both`.
-7. After the user answers, install only the selected adapter(s) using this repository's documented install flow.
+7. After the user answers:
+   - clone `https://github.com/mulligan-madness/linear-agent-kit.git` if the repo is not already present locally
+   - run `./install.sh codex`, `./install.sh cursor`, or `./install.sh both` from the repo root
 8. Verify the installed files exist in the expected location.
 9. Report:
    - whether `linear` is installed
