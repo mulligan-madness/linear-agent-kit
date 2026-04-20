@@ -1,78 +1,125 @@
-# Linear CLI Skills for Codex
+# Linear Agent Kit
 
-This repo ships a bundle of Codex skills for using the local [`linear`](https://github.com/schpet/linear-cli) CLI.
+`linear-agent-kit` is a reusable Codex and Cursor package for working with the upstream Linear CLI executable, `linear`.
 
-Included skills:
+This repo is not the upstream CLI itself.
 
-1. `linear-cli`
-2. `linear-cli-auth`
-3. `linear-cli-issues`
-4. `linear-cli-pr-publish`
-5. `linear-cli-planning`
-6. `linear-cli-workspace`
-7. `linear-cli-api`
+- Upstream dependency: [`schpet/linear-cli`](https://github.com/schpet/linear-cli)
+- Executable installed on the machine: `linear`
+- This repo: agent skills, helper scripts, install docs, and adapter packaging
 
-Bundled helper scripts:
+## What You Need First
 
-1. `skills/linear-cli-issues/scripts/fetch_linear_issue_images.mjs`
-2. `skills/linear-cli-issues/scripts/promote_linear_image_to_issue_description.mjs`
-3. `skills/linear-cli-workspace/scripts/fetch_linear_document_images.mjs`
+Install the upstream Linear CLI if it is not already present.
 
-## Quick install
-
-Clone the repo, then run:
+Recommended install paths from the upstream project:
 
 ```bash
-./install.sh
+brew install schpet/tap/linear
 ```
 
-By default this installs the skills into `${CODEX_HOME:-$HOME/.codex}/skills`.
-
-After installing, restart Codex so a new session picks up the new skills.
-
-## What this bundle does
-
-These skills teach Codex how to:
-
-1. route general Linear requests to the right workflow
-2. manage Linear auth and workspace selection safely
-3. create, inspect, and update issues with good hygiene
-4. handle planning objects and status updates with evidence-first workflows
-5. use documents, labels, teams, and other workspace features without guessing
-6. fall back to raw `linear api` only when first-class CLI commands are insufficient
-
-The bundled helper script supports image-aware issue workflows by:
-
-1. extracting inline image references from issue descriptions and optional comments
-2. downloading retrievable assets to local temp paths using the same auth rule as the upstream CLI for `uploads.linear.app`
-3. returning machine-readable JSON so agents can hand successful local files to native image-viewing tools
-
-The bundled promotion helper supports local-image-to-description workflows by:
-
-1. uploading a local image file to Linear cloud storage
-2. generating the corresponding markdown image reference
-3. merging that reference into the target issue description non-destructively
-
-The bundled document-image helper supports document workflows by:
-
-1. extracting inline image and Linear-upload links from document markdown
-2. downloading retrievable assets to local temp paths
-3. returning machine-readable JSON so agents can hand successful local files to native image-viewing tools
-
-## Local install target
-
-The installer copies each skill directory into:
+or
 
 ```bash
-${CODEX_HOME:-$HOME/.codex}/skills/
+deno install -A --reload -f -g -n linear jsr:@schpet/linear-cli
 ```
 
-Installed directories:
+Verify:
 
-1. `linear-cli`
-2. `linear-cli-auth`
-3. `linear-cli-issues`
-4. `linear-cli-pr-publish`
-5. `linear-cli-planning`
-6. `linear-cli-workspace`
-7. `linear-cli-api`
+```bash
+linear --version
+```
+
+Then authenticate:
+
+```bash
+linear auth login
+```
+
+Verify auth:
+
+```bash
+linear auth list
+linear auth whoami
+```
+
+## For Agents
+
+Copy and paste this into Codex, Cursor, or another coding agent:
+
+```text
+Set up this repository's Linear Agent Kit on this machine.
+
+Important distinction:
+- The upstream dependency is the Linear CLI executable, `linear`.
+- This repository is the Linear Agent Kit.
+
+Your job:
+1. Read `README.md` and `INSTALL.md` in this repository before doing anything else.
+2. Check whether the upstream Linear CLI is installed by running `linear --version`.
+3. If `linear` is missing, install it using the commands documented in this repository, then verify with `linear --version`.
+4. Check whether `linear` is authenticated by running `linear auth list` and `linear auth whoami`.
+5. If authentication is missing, run `linear auth login`, complete the auth flow, and verify again.
+6. Ask the user which adapter(s) to install: `codex`, `cursor`, or `both`.
+7. After the user answers, install only the selected adapter(s) using this repository's documented install flow.
+8. Verify the installed files exist in the expected location.
+9. Report:
+   - whether `linear` is installed
+   - whether `linear` is authenticated
+   - which adapter(s) were installed
+   - the exact install location(s)
+   - any restart step required
+
+Do not guess paths. Read the repository files first and use the installation steps they define.
+```
+
+## Manual Install
+
+Detailed install steps live in [INSTALL.md](INSTALL.md).
+
+If you already have `linear` installed and authenticated, you can use the helper script:
+
+```bash
+./install.sh codex
+./install.sh cursor
+./install.sh both
+```
+
+## What Gets Installed
+
+Codex:
+
+- skill directories copied into `${CODEX_HOME:-$HOME/.codex}/skills`
+
+Cursor:
+
+- a local plugin copied into `${CURSOR_PLUGIN_HOME:-$HOME/.cursor/plugins/local}/linear-agent-kit`
+- the plugin exposes the same shared `skills/` tree to Cursor
+
+## Verify Adapter Install
+
+Codex:
+
+- start a new session
+- confirm the skill names are available under the `linear-agent-kit*` family
+
+Cursor:
+
+- restart Cursor after installation
+- start a new Agent session and confirm the plugin is loaded
+
+## Included Skills
+
+1. `linear-agent-kit`
+2. `linear-agent-kit-auth`
+3. `linear-agent-kit-issues`
+4. `linear-agent-kit-pr-publish`
+5. `linear-agent-kit-planning`
+6. `linear-agent-kit-workspace`
+7. `linear-agent-kit-api`
+
+## Helper Scripts
+
+1. `skills/linear-agent-kit-issues/scripts/fetch_linear_issue_images.mjs`
+2. `skills/linear-agent-kit-issues/scripts/promote_linear_image_to_issue_description.mjs`
+3. `skills/linear-agent-kit-workspace/scripts/fetch_linear_document_images.mjs`

@@ -1,9 +1,9 @@
 ---
-name: linear-cli-api
-description: Use when the requested Linear workflow cannot be expressed cleanly with first-class linear CLI subcommands and raw GraphQL access is necessary
+name: linear-agent-kit-api
+description: Use when the requested Linear workflow cannot be expressed cleanly with first-class `linear` subcommands and raw GraphQL access is necessary
 ---
 
-# Linear CLI API
+# Linear Agent Kit API
 
 ## Overview
 

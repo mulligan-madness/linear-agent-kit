@@ -1,13 +1,13 @@
 ---
-name: linear-cli-issues
-description: Use when working on Linear issues, comments, attachments, dependencies, branch-linked issue lookup, or PR helper flows through the local linear CLI
+name: linear-agent-kit-issues
+description: Use when working on Linear issues, comments, attachments, dependencies, branch-linked issue lookup, or PR helper flows through the upstream `linear` CLI
 ---
 
-# Linear CLI Issues
+# Linear Agent Kit Issues
 
 ## Overview
 
-Use this skill for issue work through the local CLI: reading issues, creating or updating issues, managing comments, adding attachments, inspecting or editing dependencies, and using branch or PR helpers.
+Use this skill for issue work through the upstream `linear` CLI: reading issues, creating or updating issues, managing comments, adding attachments, inspecting or editing dependencies, and using branch or PR helpers.
 
 ## Allowed Commands
 

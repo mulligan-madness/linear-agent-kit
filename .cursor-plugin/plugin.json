@@ -1,0 +1,19 @@
+{
+  "name": "linear-agent-kit",
+  "displayName": "Linear Agent Kit",
+  "description": "Linear workflows, helper scripts, and reusable skills built on top of the upstream linear CLI.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Brennan Mulligan"
+  },
+  "homepage": "https://github.com/mulligan-madness/linear-agent-kit",
+  "repository": "https://github.com/mulligan-madness/linear-agent-kit",
+  "license": "MIT",
+  "keywords": [
+    "linear",
+    "agent",
+    "skills",
+    "workflow"
+  ],
+  "skills": "./skills/"
+}

@@ -1,9 +1,9 @@
 ---
-name: linear-cli-auth
-description: Use when working on linear CLI installation, authentication, configured workspaces, default workspace selection, or workspace-targeting problems
+name: linear-agent-kit-auth
+description: Use when working on upstream `linear` CLI installation, authentication, configured workspaces, default workspace selection, or workspace-targeting problems
 ---
 
-# Linear CLI Auth
+# Linear Agent Kit Auth
 
 ## Overview
 

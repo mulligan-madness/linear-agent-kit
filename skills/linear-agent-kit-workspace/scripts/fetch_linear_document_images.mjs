@@ -8,7 +8,7 @@ import { join } from "node:path";
 import {
   downloadAsset,
   extractMarkdownAssets,
-} from "../../linear-cli-issues/scripts/fetch_linear_issue_images.mjs";
+} from "../../linear-agent-kit-issues/scripts/fetch_linear_issue_images.mjs";
 
 export function collectDocumentAssets(document) {
   const documentId = document.id || document.slugId || "unknown-document";
@@ -56,7 +56,7 @@ export async function fetchDocumentImages(options, deps = {}) {
 
   const document = readDocument(documentId, workspace);
   const targetDir = downloadDir ||
-    await mkdtemp(join(tmpdir(), "linear-cli-document-images-"));
+    await mkdtemp(join(tmpdir(), "linear-agent-kit-document-images-"));
   const apiKey = download ? getApiKey(workspace) : null;
   const assets = collectDocumentAssets(document);
   const results = [];

@@ -7,7 +7,7 @@ import { join } from "node:path";
 import {
   collectDocumentAssets,
   fetchDocumentImages,
-} from "../skills/linear-cli-workspace/scripts/fetch_linear_document_images.mjs";
+} from "../skills/linear-agent-kit-workspace/scripts/fetch_linear_document_images.mjs";
 
 test("collectDocumentAssets extracts inline images and linear upload links from document content", () => {
   const document = {
@@ -57,7 +57,7 @@ test("fetchDocumentImages supports extract-only mode", async () => {
       documentId: "doc-2",
       workspace: "cns-labs",
       download: false,
-      downloadDir: await mkdtemp(join(tmpdir(), "linear-cli-doc-helper-")),
+      downloadDir: await mkdtemp(join(tmpdir(), "linear-agent-kit-doc-helper-")),
     },
     {
       readDocument: () => ({
@@ -75,7 +75,7 @@ test("fetchDocumentImages supports extract-only mode", async () => {
 });
 
 test("fetchDocumentImages downloads assets via injected downloader", async () => {
-  const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-doc-helper-"));
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-doc-helper-"));
 
   try {
     const result = await fetchDocumentImages(

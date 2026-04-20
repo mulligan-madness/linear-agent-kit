@@ -534,7 +534,7 @@ async function main() {
 
   const issueData = readIssueData(options.issueId, options.workspace);
   const downloadDir = options.downloadDir ||
-    await mkdtemp(join(tmpdir(), "linear-cli-issue-images-"));
+    await mkdtemp(join(tmpdir(), "linear-agent-kit-issue-images-"));
   const apiKey = options.download ? resolveApiKey(options.workspace) : null;
   const assets = collectIssueAssets(issueData, {
     includeComments: options.includeComments,

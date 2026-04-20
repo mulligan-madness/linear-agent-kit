@@ -1,9 +1,9 @@
 ---
-name: linear-cli-pr-publish
+name: linear-agent-kit-pr-publish
 description: Use when publishing a GitHub pull request tied to one or more Linear issues, especially for stacked branches where Codex should research the best base branch, draft a linked issue-to-commit PR body, ask for one approval covering base branch and PR content, then create the PR, comment on the issues, and move them to Done
 ---
 
-# Linear CLI PR Publish
+# Linear Agent Kit PR Publish
 
 ## Overview
 
@@ -40,7 +40,7 @@ Use this skill for the combined Linear-plus-GitHub PR publishing flow. It owns b
    - If the user gave issue IDs, use those directly.
    - If the user gave a project/state instead, discover the issue set from Linear first.
    - Read every included issue with `linear issue view <issueId> --json --no-download` and fetch its Linear URL.
-   - If issue content includes images, use the installed `linear-cli-issues` helper workflow to fetch local image files when possible.
+   - If issue content includes images, use the installed `linear-agent-kit-issues` helper workflow to fetch local image files when possible.
    - If the image helper reports download failures, treat that as a blocker on image understanding and report it directly instead of attempting ad hoc shell downloads.
 3. Recommend the base branch.
    - Prefer the closest ancestor branch whose diff is limited to the commits relevant to the intended issue set.

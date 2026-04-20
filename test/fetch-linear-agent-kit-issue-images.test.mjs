@@ -13,7 +13,7 @@ import {
   mergeDescriptionWithBlock,
   renderImageMarkdown,
   requestLinearUpload,
-} from "../skills/linear-cli-issues/scripts/fetch_linear_issue_images.mjs";
+} from "../skills/linear-agent-kit-issues/scripts/fetch_linear_issue_images.mjs";
 
 test("extractMarkdownAssets finds markdown images and Linear upload links", () => {
   const markdown = [
@@ -129,7 +129,7 @@ test("downloadAsset saves content with extension inferred from response type", a
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
-  const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-helper-test-"));
 
   try {
     const result = await downloadAsset({
@@ -164,7 +164,7 @@ test("downloadAsset does not duplicate file extensions already present in label"
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
-  const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-helper-test-"));
 
   try {
     const result = await downloadAsset({
@@ -190,7 +190,7 @@ test("downloadAsset does not duplicate file extensions already present in label"
 });
 
 test("downloadAsset reports fetch errors without throwing", async () => {
-  const downloadDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-helper-test-"));
 
   try {
     const result = await downloadAsset({
@@ -242,7 +242,7 @@ test("renderImageMarkdown and mergeDescriptionWithBlock build deterministic desc
 });
 
 test("requestLinearUpload returns parsed upload metadata from linear api", async () => {
-  const fixtureDir = await mkdtemp(join(tmpdir(), "linear-cli-helper-test-"));
+  const fixtureDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-helper-test-"));
   const fixturePath = join(fixtureDir, "fixture.png");
   await writeFile(fixturePath, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 

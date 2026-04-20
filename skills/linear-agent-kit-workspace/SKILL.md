@@ -1,9 +1,9 @@
 ---
-name: linear-cli-workspace
-description: Use when working on Linear teams, labels, documents, workspace configuration, schema inspection, or repository autolinks through the local linear CLI
+name: linear-agent-kit-workspace
+description: Use when working on Linear teams, labels, documents, workspace configuration, schema inspection, or repository autolinks through the upstream `linear` CLI
 ---
 
-# Linear CLI Workspace
+# Linear Agent Kit Workspace
 
 ## Overview
 
@@ -68,7 +68,7 @@ Use this skill for workspace-scoped administration and supporting structures: te
 
 ### Document vs issue choice
 - Trigger: `i need to write this down before i lose it`
-- Commands: if it is notes or context, use `linear document create -t <title> -c <content>`; if it is tracked execution work, route to `linear-cli-issues`
+- Commands: if it is notes or context, use `linear document create -t <title> -c <content>`; if it is tracked execution work, route to `linear-agent-kit-issues`
 - Verify: the chosen artifact matches the user intent, and no execution ticket is created for pure notes
 
 ### Document capture

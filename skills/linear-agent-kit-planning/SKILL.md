@@ -1,9 +1,9 @@
 ---
-name: linear-cli-planning
-description: Use when managing Linear projects, milestones, cycles, initiatives, or status updates through the local linear CLI
+name: linear-agent-kit-planning
+description: Use when managing Linear projects, milestones, cycles, initiatives, or status updates through the upstream `linear` CLI
 ---
 
-# Linear CLI Planning
+# Linear Agent Kit Planning
 
 ## Overview
 
@@ -31,7 +31,7 @@ Use this skill for planning structures and execution tracking: projects, milesto
    - `linear initiative-update list <initiativeId> --json`
 2. Use explicit workspace targeting when the user names a workspace.
 3. For create or update actions, prefer specific flag-driven commands over interactive prompts when inputs are known.
-4. When a planning object does not expose the structured fields you need through first-class CLI output, route to `linear-cli-api` instead of inferring from rendered text.
+4. When a planning object does not expose the structured fields you need through first-class CLI output, route to `linear-agent-kit-api` instead of inferring from rendered text.
 5. For project and initiative status updates, prefer `--body-file <path>` when the markdown is substantial.
 6. After any write, verify with a fresh `view` or `list`.
 

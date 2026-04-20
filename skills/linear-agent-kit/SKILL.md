@@ -1,13 +1,13 @@
 ---
-name: linear-cli
-description: Use when a task should be handled through the local linear CLI and the right Linear workflow has not yet been classified
+name: linear-agent-kit
+description: Use when a task should be handled through the upstream `linear` CLI and the right Linear workflow has not yet been classified
 ---
 
-# Linear CLI
+# Linear Agent Kit
 
 ## Overview
 
-Use this skill as the umbrella entrypoint for general Linear CLI work. Resolve workspace context, classify intent, and route quickly to the specialist skill that owns the command family.
+Use this skill as the umbrella entrypoint for general Linear work through the upstream `linear` CLI. Resolve workspace context, classify intent, and route quickly to the specialist skill that owns the command family.
 
 ## Direct Scope
 
@@ -44,12 +44,12 @@ Once the request is clearly scoped to a domain, route immediately and do not kee
    - between project and initiative, prefer project unless the request is clearly cross-project or strategic
    - ask only when the risk of choosing the wrong artifact is high
 5. Classify the request:
-   - auth or workspace selection -> `linear-cli-auth`
-   - issues, comments, attachments, dependencies, branch-linked lookup -> `linear-cli-issues`
-   - PR publishing tied to Linear issues, stacked-base recommendation, issue-to-commit PR drafting, and post-PR issue updates -> `linear-cli-pr-publish`
-   - projects, milestones, cycles, initiatives, status updates -> `linear-cli-planning`
-   - teams, labels, documents, config, schema, autolinks -> `linear-cli-workspace`
-   - raw GraphQL fallback -> `linear-cli-api`
+   - auth or workspace selection -> `linear-agent-kit-auth`
+   - issues, comments, attachments, dependencies, branch-linked lookup -> `linear-agent-kit-issues`
+   - PR publishing tied to Linear issues, stacked-base recommendation, issue-to-commit PR drafting, and post-PR issue updates -> `linear-agent-kit-pr-publish`
+   - projects, milestones, cycles, initiatives, status updates -> `linear-agent-kit-planning`
+   - teams, labels, documents, config, schema, autolinks -> `linear-agent-kit-workspace`
+   - raw GraphQL fallback -> `linear-agent-kit-api`
 6. Summarize the chosen route in one line and switch to the specialist skill.
 
 ## Guardrails

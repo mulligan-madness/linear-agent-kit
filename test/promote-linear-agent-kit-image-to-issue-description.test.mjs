@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { promoteImageToIssueDescription } from "../skills/linear-cli-issues/scripts/promote_linear_image_to_issue_description.mjs";
+import { promoteImageToIssueDescription } from "../skills/linear-agent-kit-issues/scripts/promote_linear_image_to_issue_description.mjs";
 
 test("promoteImageToIssueDescription merges uploaded image markdown into existing description", async () => {
   let capturedUpdate = null;

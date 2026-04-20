@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linear Agent Kit PR Publish"
+  short_description: "Publish GitHub PRs from Linear issue sets"
+  default_prompt: "Use $linear-agent-kit-pr-publish to draft and publish a PR from the current branch with Linear issue mapping."

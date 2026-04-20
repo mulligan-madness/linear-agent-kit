@@ -115,7 +115,7 @@ export async function promoteImageToIssueDescription({
 
   let descriptionFile = null;
   if (!dryRun) {
-    const tempDir = await mkdtemp(join(tmpdir(), "linear-cli-promote-image-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-promote-image-"));
     descriptionFile = join(tempDir, `${issueId}-description.md`);
     await writeFile(descriptionFile, mergedDescription);
     updateIssue({
