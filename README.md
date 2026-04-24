@@ -127,6 +127,6 @@ Cursor:
 
 ## Helper Scripts
 
-1. `skills/linear-agent-kit-issues/scripts/fetch_linear_issue_images.mjs`
+1. `skills/linear-agent-kit-issues/scripts/fetch_linear_issue_images.mjs` fetches issue image/file assets from descriptions, comments, and first-class issue attachments.
 2. `skills/linear-agent-kit-issues/scripts/promote_linear_image_to_issue_description.mjs`
 3. `skills/linear-agent-kit-workspace/scripts/fetch_linear_document_images.mjs`

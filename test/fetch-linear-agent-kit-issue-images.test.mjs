@@ -111,6 +111,93 @@ test("collectIssueAssets includes description and comments when requested", () =
   );
 });
 
+test("collectIssueAssets includes CLI-shaped issue attachments when requested", () => {
+  const issueData = {
+    identifier: "CNS-999",
+    description: "No inline assets",
+    attachments: [
+      {
+        id: "attachment-1",
+        title: "Planning contract",
+        url: "https://uploads.linear.app/org/contract.md",
+      },
+      {
+        id: "attachment-2",
+        subtitle: "Fallback label",
+        url: "https://uploads.linear.app/org/fallback.txt",
+      },
+    ],
+  };
+
+  assert.deepEqual(collectIssueAssets(issueData), []);
+
+  const assets = collectIssueAssets(issueData, { includeAttachments: true });
+
+  assert.deepEqual(
+    assets.map(({ sourceType, sourceId, kind, label, url }) => ({
+      sourceType,
+      sourceId,
+      kind,
+      label,
+      url,
+    })),
+    [
+      {
+        sourceType: "attachment",
+        sourceId: "attachment-1",
+        kind: "attachment",
+        label: "Planning contract",
+        url: "https://uploads.linear.app/org/contract.md",
+      },
+      {
+        sourceType: "attachment",
+        sourceId: "attachment-2",
+        kind: "attachment",
+        label: "Fallback label",
+        url: "https://uploads.linear.app/org/fallback.txt",
+      },
+    ],
+  );
+});
+
+test("collectIssueAssets includes GraphQL-shaped issue attachments when requested", () => {
+  const issueData = {
+    identifier: "CNS-999",
+    description: "No inline assets",
+    attachments: {
+      nodes: [
+        {
+          id: "attachment-1",
+          title: null,
+          subtitle: null,
+          url: "https://uploads.linear.app/org/file.json",
+        },
+      ],
+    },
+  };
+
+  const assets = collectIssueAssets(issueData, { includeAttachments: true });
+
+  assert.deepEqual(
+    assets.map(({ sourceType, sourceId, kind, label, url }) => ({
+      sourceType,
+      sourceId,
+      kind,
+      label,
+      url,
+    })),
+    [
+      {
+        sourceType: "attachment",
+        sourceId: "attachment-1",
+        kind: "attachment",
+        label: "attachment",
+        url: "https://uploads.linear.app/org/file.json",
+      },
+    ],
+  );
+});
+
 test("buildAuthHeaders only adds auth for private Linear uploads", () => {
   assert.deepEqual(buildAuthHeaders("https://example.com/test.png", "secret"), {});
   assert.deepEqual(
@@ -149,6 +236,40 @@ test("downloadAsset saves content with extension inferred from response type", a
     assert.match(result.path ?? "", /\.png$/);
     const data = await readFile(result.path);
     assert.deepEqual([...data], [0x89, 0x50, 0x4e, 0x47]);
+  } finally {
+    server.close();
+    await rm(downloadDir, { recursive: true, force: true });
+  }
+});
+
+test("downloadAsset saves Markdown content with md extension inferred from response type", async () => {
+  const server = createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "text/markdown" });
+    response.end("# Planning contract\n");
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const port = typeof address === "object" && address ? address.port : 0;
+  const downloadDir = await mkdtemp(join(tmpdir(), "linear-agent-kit-helper-test-"));
+
+  try {
+    const result = await downloadAsset({
+      asset: {
+        kind: "attachment",
+        url: `http://127.0.0.1:${port}/fixture`,
+        label: "planning contract",
+        sourceType: "attachment",
+        sourceId: "attachment-1",
+      },
+      downloadDir,
+      fetchImpl: fetch,
+      apiKey: null,
+    });
+
+    assert.equal(result.status, "downloaded");
+    assert.match(result.path ?? "", /planning-contract\.md$/);
+    assert.equal(await readFile(result.path, "utf8"), "# Planning contract\n");
   } finally {
     server.close();
     await rm(downloadDir, { recursive: true, force: true });
