@@ -22,6 +22,9 @@ const CONTENT_TYPE_EXTENSIONS = new Map([
   ["image/gif", ".gif"],
   ["image/svg+xml", ".svg"],
   ["application/pdf", ".pdf"],
+  ["text/markdown", ".md"],
+  ["text/plain", ".txt"],
+  ["application/json", ".json"],
 ]);
 
 const MIME_TYPES = new Map([
@@ -75,7 +78,7 @@ export function extractMarkdownAssets(markdown) {
 }
 
 export function collectIssueAssets(issueData, options = {}) {
-  const { includeComments = false } = options;
+  const { includeComments = false, includeAttachments = false } = options;
   const issueId = issueData.identifier || issueData.id || "unknown-issue";
   const assets = extractMarkdownAssets(issueData.description).map((asset) => ({
     ...asset,
@@ -83,22 +86,47 @@ export function collectIssueAssets(issueData, options = {}) {
     sourceId: issueId,
   }));
 
-  if (!includeComments || !Array.isArray(issueData.comments)) {
-    return assets;
+  if (includeComments && Array.isArray(issueData.comments)) {
+    for (const comment of issueData.comments) {
+      const commentId = comment.id || "unknown-comment";
+      for (const asset of extractMarkdownAssets(comment.body)) {
+        assets.push({
+          ...asset,
+          sourceType: "comment",
+          sourceId: commentId,
+        });
+      }
+    }
   }
 
-  for (const comment of issueData.comments) {
-    const commentId = comment.id || "unknown-comment";
-    for (const asset of extractMarkdownAssets(comment.body)) {
+  if (includeAttachments) {
+    for (const attachment of getIssueAttachments(issueData)) {
+      if (!attachment?.url || !getLinearUploadHost(attachment.url)) {
+        continue;
+      }
       assets.push({
-        ...asset,
-        sourceType: "comment",
-        sourceId: commentId,
+        kind: "attachment",
+        url: attachment.url,
+        label: attachment.title || attachment.subtitle || "attachment",
+        sourceType: "attachment",
+        sourceId: attachment.id || issueId,
       });
     }
   }
 
   return assets;
+}
+
+function getIssueAttachments(issueData) {
+  if (Array.isArray(issueData.attachments)) {
+    return issueData.attachments;
+  }
+
+  if (Array.isArray(issueData.attachments?.nodes)) {
+    return issueData.attachments.nodes;
+  }
+
+  return [];
 }
 
 function stripWrapping(value) {
@@ -471,6 +499,7 @@ function parseArgs(argv) {
     issueId: null,
     workspace: null,
     includeComments: false,
+    includeAttachments: false,
     download: true,
     downloadDir: null,
     help: false,
@@ -489,6 +518,9 @@ function parseArgs(argv) {
         break;
       case "--comments":
         options.includeComments = true;
+        break;
+      case "--attachments":
+        options.includeAttachments = true;
         break;
       case "--extract-only":
         options.download = false;
@@ -517,6 +549,7 @@ function printHelp() {
       "  -i, --issue <issueId>        Linear issue identifier, e.g. CNS-61",
       "  -w, --workspace <slug>       Linear workspace slug",
       "      --comments               Include issue comments in extraction",
+      "      --attachments            Include first-class issue attachments in extraction",
       "      --extract-only           Do not attempt downloads; return refs only",
       "      --download-dir <path>    Directory for downloaded assets",
       "  -h, --help                   Show this help",
@@ -538,6 +571,7 @@ async function main() {
   const apiKey = options.download ? resolveApiKey(options.workspace) : null;
   const assets = collectIssueAssets(issueData, {
     includeComments: options.includeComments,
+    includeAttachments: options.includeAttachments,
   });
 
   const results = [];
@@ -566,6 +600,7 @@ async function main() {
     issueId: issueData.identifier || options.issueId,
     workspace: options.workspace,
     includeComments: options.includeComments,
+    includeAttachments: options.includeAttachments,
     downloadAttempted: options.download,
     downloadDir,
     assets: results,
